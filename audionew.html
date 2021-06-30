@@ -90,8 +90,8 @@
                 
 
                 audioContext = new AudioContext();
-                alert("aquiii");
                 analyser = audioContext.createAnalyser();
+                alert("aquiii");
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
 
                 analyser.fftSize = 1024;
