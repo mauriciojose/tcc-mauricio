@@ -99,7 +99,7 @@
                 // analyser.getByteFrequencyData(dataArray);
 
                 audioSourceNode.connect(analyser);
-                alert("aquiii33333");
+                
                 // console.log(dataArray);
 
                 process();
@@ -115,10 +115,10 @@
             setInterval(function(){
                 // FFTData = new Uint8Array(analyser.fftSize);
                 // analyser.getByteFrequencyData(FFTData);
-
+                alert("aquiii1111");
                 timeDataArray = new Float32Array(analyser.frequencyBinCount);
                 analyser.getFloatTimeDomainData(timeDataArray);
-
+                alert("aquiii22222");
                 // var buffer = new Uint8Array(analyser.fftSize);
                 // // See initializations in the AudioContent and AnalyserNode sections of the demo.
                 // analyser.getByteTimeDomainData(buffer); 
@@ -132,14 +132,15 @@
                 //     }
                 // }
                 console.log("sssss");
+                alert("aquiii33333");
                 let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate).toFixed(2);
                 let notaTocada = pitch(fundamental) || '';
+                alert("aquiii44444");
                 
                 frequencia.innerHTML = `${fundamental} Hz`;
                 nota.innerHTML = `${notaTocada}`;
 
                 console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
-                alert("aquiii");
                 draw(timeDataArray);
                 // console.log(findFundamentalFreq(buffer,audioContext.sampleRate) + ' Hz')
                 // console.log(maior);
