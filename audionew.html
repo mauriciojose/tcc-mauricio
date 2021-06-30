@@ -83,7 +83,7 @@
         var analyser;
         var audioSourceNode;
         
-        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }}).then(
+        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
                 
                 audioContext = new AudioContext();
@@ -104,7 +104,7 @@
 
             },
             err => {
-                console.error(err);
+                alert(err.message);
             }
         );
       
