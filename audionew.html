@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acordes</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        div#frequencia{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            /* color: rgb(5, 146, 255); */
+            /* width: 130px; */
+            /* height: 130px; */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+        }
+        div#nota{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            background-color: rgb(5, 146, 255);
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+            margin-bottom: 20px;
+        }
+        div.display-note{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        div.size {
+            width: 100%;
+        }
+    </style>
+
+    <script src="pitch.js"></script>
+
+</head>
+<body>
+    
+    <div class="container">
+        <div style="width: 100%; height: 64.4vh; background-color: rgb(56, 56, 56);"  class="display-note">
+            <div id="nota" class="size">
+                
+            </div>
+            <div id="frequencia" class="size">
+                12 Hz
+            </div>
+        </div>
+        <canvas style="width: 100%; height: 35vh;" id="oscilloscope"></canvas>
+    </div>
+    
+
+    <script async>
+        
+        var canvas = document.querySelector('canvas');
+        var canvasCtx = canvas.getContext("2d");
+        
+        var frequencia = document.getElementById('frequencia');
+        var nota = document.getElementById('nota');
+
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+        var audioContext;
+        var analyser;
+        var audioSourceNode;
+        
+        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }}).then(
+            stream => {
+                
+                audioContext = new AudioContext();
+                analyser = audioContext.createAnalyser();
+                audioSourceNode = audioContext.createMediaStreamSource(stream);
+
+                analyser.fftSize = 1024;
+                var bufferLength = analyser.frequencyBinCount;
+                // var dataArray = new Uint8Array(bufferLength);
+                // analyser.getByteFrequencyData(dataArray);
+
+                audioSourceNode.connect(analyser);
+
+                // console.log(dataArray);
+
+                process();
+
+
+            },
+            err => {
+                console.error(err);
+            }
+        );
+      
+        function process(){
+            setInterval(function(){
+                // FFTData = new Uint8Array(analyser.fftSize);
+                // analyser.getByteFrequencyData(FFTData);
+
+                timeDataArray = new Float32Array(analyser.frequencyBinCount);
+                analyser.getFloatTimeDomainData(timeDataArray);
+
+                // var buffer = new Uint8Array(analyser.fftSize);
+                // // See initializations in the AudioContent and AnalyserNode sections of the demo.
+                // analyser.getByteTimeDomainData(buffer); 
+
+                // let maior = FFTData[0];
+                // for (let index = 0; index < FFTData.length; index++) {
+                //     const element = FFTData[index];
+                //     if (element > maior) {
+                //         maior = element;
+                //         // console.log(maior, index);
+                //     }
+                // }
+                console.log("sssss");
+                let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate).toFixed(2);
+                let notaTocada = pitch(fundamental) || '';
+                
+                frequencia.innerHTML = `${fundamental} Hz`;
+                nota.innerHTML = `${notaTocada}`;
+
+                console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
+                draw(timeDataArray);
+                // console.log(findFundamentalFreq(buffer,audioContext.sampleRate) + ' Hz')
+                // console.log(maior);
+            },100);
+        }
+        
+
+        function autoCorrelate( buf, sampleRate ) {
+            // Implements the ACF2+ algorithm
+            var SIZE = buf.length;
+            var rms = 0;
+
+            for (var i=0;i<SIZE;i++) {
+                var val = buf[i];
+                rms += val*val;
+            }
+            rms = Math.sqrt(rms/SIZE);
+            if (rms<0.01) // not enough signal
+                return 0;
+
+            var r1=0, r2=SIZE-1, thres=0.2;
+            for (var i=0; i<SIZE/2; i++)
+                if (Math.abs(buf[i])<thres) { r1=i; break; }
+            for (var i=1; i<SIZE/2; i++)
+                if (Math.abs(buf[SIZE-i])<thres) { r2=SIZE-i; break; }
+
+            buf = buf.slice(r1,r2);
+            SIZE = buf.length;
+
+            var c = new Array(SIZE).fill(0);
+            for (var i=0; i<SIZE; i++)
+                for (var j=0; j<SIZE-i; j++)
+                    c[i] = c[i] + buf[j]*buf[j+i];
+
+            var d=0; while (c[d]>c[d+1]) d++;
+            var maxval=-1, maxpos=-1;
+
+            var arrayFrequencyes = [-1, -1, -1];
+            var arrayIndices = [-1, -1, -1];
+
+            for (var i=d; i<SIZE; i++) {
+
+                if (c[i] > arrayFrequencyes[0]) {
+                    arrayFrequencyes[0] = c[i];
+                    arrayIndices[0] = i;
+                }else{
+                    if (c[i] > arrayFrequencyes[1]) {
+                        arrayFrequencyes[1] = c[i];
+                        arrayIndices[1] = i;
+                    } else {
+                        if (c[i] > arrayFrequencyes[2]) {
+                            arrayFrequencyes[2] = c[i];
+                            arrayIndices[2] = i;
+                        } 
+                    }
+                }
+                
+                // if (c[i] > maxval) {
+                //     maxval = c[i];
+                //     maxpos = i;
+                // }
+            }
+
+            let frequencias = [-1, -1, -1];
+
+            for (let index = 0; index < arrayIndices.length; index++) {
+                let T0 = arrayIndices[index];
+                
+                let x1=c[T0-1], x2=c[T0], x3=c[T0+1];
+                a = (x1 + x3 - 2*x2)/2;
+                b = (x3 - x1)/2;
+                if (a) T0 = T0 - b/(2*a);
+
+                frequencias[index] = sampleRate/T0;
+
+            }
+
+            // var T0 = maxpos;
+
+            // let x1=c[T0-1], x2=c[T0], x3=c[T0+1];
+            // a = (x1 + x3 - 2*x2)/2;
+            // b = (x3 - x1)/2;
+            // if (a) T0 = T0 - b/(2*a);
+            console.log(frequencias, Math.trunc( frequencias[0] ));
+
+            return ( Math.trunc( frequencias[0] ) === Math.trunc( frequencias[1] ) ) && ( Math.trunc( frequencias[0]  )=== Math.trunc( frequencias[2] ) ) ? frequencias[0] : 0;
+        }
+
+
+        function draw(dataArray) {
+
+            var bufferLength = analyser.frequencyBinCount;
+
+            var dataArray = new Float32Array(bufferLength);
+
+            analyser.getFloatFrequencyData(dataArray);
+
+            canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+            
+            canvasCtx.fillStyle = 'rgb(56, 56, 56)';
+            canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            var barWidth = (WIDTH / bufferLength) * 3.2;
+            var barHeight;
+            var x = 0;
+
+            for(var i = 0; i < bufferLength; i++) {
+                barHeight = (dataArray[i] + 120)*2;
+                
+                canvasCtx.fillStyle = 'rgb(5, 146, 255)';
+                canvasCtx.strokeStyle = "rgb(5, 146, 255)";
+                canvasCtx.lineWidth   = 1;
+                canvasCtx.fillRect(x,HEIGHT-barHeight/2,barWidth,barHeight/2);
+
+                x += barWidth + 2.5;
+            }
+        }
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="oscilloscope"></canvas>
+    <div id="display"></div>
+    <audio></audio>
+    
+
+    <script async>
+        
+        var audio = document.querySelector('audio');
+        var display = document.getElementById("display");
+        var audioCtx;
+        var source;
+        var analyser;
+        var processor;
+        var mostra = true;
+
+        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }}).then(
+            stream => {
+                //while (true) {
+                audioCtx = new AudioContext();
+                source = audioCtx.createMediaStreamSource(stream);
+                
+                analyser = audioCtx.createAnalyser();
+                processor = audioCtx.createScriptProcessor(2048, 1, 1);
+                // analyser.minDecibels = -90;
+                // analyser.maxDecibels = -10;
+                // analyser.smoothingTimeConstant = 0.85;
+                analyser.fftSize = 2048;
+                
+                source.connect(processor);
+                source.connect(analyser);
+                processor.connect(audioCtx.destination);
+                
+                // var bufferLength = analyser.frequencyBinCount;
+                // var dataArray = new Uint8Array(bufferLength);
+                // analyser.getByteFrequencyData(dataArray);
+                
+
+                processor.onaudioprocess = function(audioProcessingEvent) {
+                    let inputBuffer = audioProcessingEvent.inputBuffer;
+                    let outputBuffer = audioProcessingEvent.outputBuffer;
+                    let rms;
+                    let total = 0.0;
+                    let normalThreshold = -50;
+                    let duckThreshold = 0.15
+                    let len = 2048 * outputBuffer.numberOfChannels;
+
+                    let maior = -10000;
+                    let key = 0;
+                    for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+                        let inputData = inputBuffer.getChannelData(channel);
+                        let outputData = outputBuffer.getChannelData(channel);
+
+                        for (let sample = 0; sample < inputBuffer.length; sample++) {
+                            // make output equal to the same as the input
+                            outputData[sample] = inputData[sample];
+                            total += Math.abs(inputData[sample]);
+
+                            if ( inputData[sample] > maior) {
+                                maior = inputData[sample]; 
+                                key = sample;
+                            }
+
+                        }
+                    }
+                    
+                    console.log(maior, key);
+                    //Root mean square
+                    rms = Math.sqrt( total / len );
+
+                    //We set the threshold to at least 'normalThreshold'
+                    let f = normalThreshold + Math.min(rms - duckThreshold, 0) * 5 * normalThreshold;
+
+                }
+
+            },
+            err => {
+                console.log(err);
+            }
+        );
+
+      
+      
+        
+    </script>
+</body>
+</html>
