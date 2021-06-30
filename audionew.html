@@ -103,7 +103,7 @@
                 analyser = audioContext.createAnalyser();
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
                 
-                analyser.fftSize = 1024;
+                analyser.fftSize = 4096;
                 var bufferLength = analyser.frequencyBinCount;
                 // var dataArray = new Uint8Array(bufferLength);
                 // analyser.getByteFrequencyData(dataArray);
@@ -121,7 +121,7 @@
             }
         );
       
-        async function process(){
+        function process(){
             setInterval(function(){
                 
                 timeDataArray = new Float32Array(analyser.frequencyBinCount);
@@ -130,7 +130,8 @@
                 
                 
                 let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate).toFixed(2);
-                let notaTocada = pitch(fundamental) || '';
+                console.log(pitch(fundamental));
+                let notaTocada = pitch(fundamental);
                 
                 frequencia.innerHTML = `${fundamental} Hz`;
                 nota.innerHTML = `${notaTocada}`;
@@ -138,7 +139,7 @@
                 // console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
                 draw(timeDataArray);
                 
-            },100);
+            },300);
         }
         
 
@@ -220,7 +221,7 @@
             // if (a) T0 = T0 - b/(2*a);
             console.log(frequencias, Math.trunc( frequencias[0] ));
 
-            return ( Math.trunc( frequencias[0] ) === Math.trunc( frequencias[1] ) ) && ( Math.trunc( frequencias[0]  )=== Math.trunc( frequencias[2] ) ) ? frequencias[0] : 0;
+            return ( Math.trunc( frequencias[0] ) === Math.trunc( frequencias[1] ) ) || ( Math.trunc( frequencias[0]  )=== Math.trunc( frequencias[2] ) ) ? frequencias[0] : 0;
         }
 
 
