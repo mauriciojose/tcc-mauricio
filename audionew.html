@@ -82,12 +82,11 @@
         var audioContext;
         var analyser;
         var audioSourceNode;
-
+        
         
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
                 
-                var AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioContext = new AudioContext();
                 analyser = audioContext.createAnalyser();
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
