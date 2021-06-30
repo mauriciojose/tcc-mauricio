@@ -87,7 +87,7 @@
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
                 
-                alert("aquiii");
+                
 
                 audioContext = new AudioContext();
                 analyser = audioContext.createAnalyser();
@@ -117,6 +117,7 @@
                 // analyser.getByteFrequencyData(FFTData);
                 alert("aquiii1111");
                 timeDataArray = new Float32Array(analyser.frequencyBinCount);
+                alert("aquiiidffdfd");
                 analyser.getFloatTimeDomainData(timeDataArray);
                 alert("aquiii22222");
                 // var buffer = new Uint8Array(analyser.fftSize);
