@@ -93,17 +93,20 @@
                 analyser = audioContext.createAnalyser();
                 alert("aquiii");
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
-
+                alert("aquiii111");
                 analyser.fftSize = 1024;
                 var bufferLength = analyser.frequencyBinCount;
+                alert("aquiii222");
                 // var dataArray = new Uint8Array(bufferLength);
                 // analyser.getByteFrequencyData(dataArray);
 
                 audioSourceNode.connect(analyser);
-
+                alert("aquiii33333");
                 // console.log(dataArray);
 
                 process();
+                
+                alert("aquiii4444444");
 
 
             },
