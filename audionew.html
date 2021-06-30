@@ -87,6 +87,8 @@
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
                 
+                alert("aquiii");
+
                 audioContext = new AudioContext();
                 analyser = audioContext.createAnalyser();
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
