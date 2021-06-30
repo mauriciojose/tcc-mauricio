@@ -86,8 +86,6 @@
         
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
-                
-                
 
                 audioContext = new AudioContext();
                 analyser = audioContext.createAnalyser();
@@ -111,41 +109,24 @@
             }
         );
       
-        function process(){
+        async function process(){
             setInterval(function(){
-                // FFTData = new Uint8Array(analyser.fftSize);
-                // analyser.getByteFrequencyData(FFTData);
-                alert("aquiii1111");
+                
                 timeDataArray = new Float32Array(analyser.frequencyBinCount);
-                alert("aquiiidffdfd");
+                
                 analyser.getFloatTimeDomainData(timeDataArray);
-                alert("aquiii22222");
-                // var buffer = new Uint8Array(analyser.fftSize);
-                // // See initializations in the AudioContent and AnalyserNode sections of the demo.
-                // analyser.getByteTimeDomainData(buffer); 
-
-                // let maior = FFTData[0];
-                // for (let index = 0; index < FFTData.length; index++) {
-                //     const element = FFTData[index];
-                //     if (element > maior) {
-                //         maior = element;
-                //         // console.log(maior, index);
-                //     }
-                // }
-                console.log("sssss");
-                alert("aquiii33333");
+                
+                
                 let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate).toFixed(2);
                 let notaTocada = pitch(fundamental) || '';
-                alert("aquiii44444");
                 
                 frequencia.innerHTML = `${fundamental} Hz`;
                 nota.innerHTML = `${notaTocada}`;
 
-                console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
+                // console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
                 draw(timeDataArray);
-                // console.log(findFundamentalFreq(buffer,audioContext.sampleRate) + ' Hz')
-                // console.log(maior);
-            },100);
+                
+            },1000);
         }
         
 
