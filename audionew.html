@@ -87,16 +87,14 @@
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
                 
-                
+                alert("aquiii");
 
                 audioContext = new AudioContext();
                 analyser = audioContext.createAnalyser();
-                alert("aquiii");
                 audioSourceNode = audioContext.createMediaStreamSource(stream);
-                alert("aquiii111");
+                
                 analyser.fftSize = 1024;
                 var bufferLength = analyser.frequencyBinCount;
-                alert("aquiii222");
                 // var dataArray = new Uint8Array(bufferLength);
                 // analyser.getByteFrequencyData(dataArray);
 
@@ -105,8 +103,6 @@
                 // console.log(dataArray);
 
                 process();
-                
-                alert("aquiii4444444");
 
 
             },
@@ -143,6 +139,7 @@
                 nota.innerHTML = `${notaTocada}`;
 
                 console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
+                alert("aquiii");
                 draw(timeDataArray);
                 // console.log(findFundamentalFreq(buffer,audioContext.sampleRate) + ' Hz')
                 // console.log(maior);
