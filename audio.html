@@ -4,91 +4,289 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Acordes</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        div#frequencia{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            /* color: rgb(5, 146, 255); */
+            /* width: 130px; */
+            /* height: 130px; */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+        }
+        div#nota{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            background-color: rgb(5, 146, 255);
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+            margin-bottom: 20px;
+        }
+        div.display-note{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        div.size {
+            width: 100%;
+        }
+    </style>
+
+    <script src="pitch.js"></script>
+
 </head>
 <body>
-    <canvas id="oscilloscope"></canvas>
-    <div id="display"></div>
-    <audio></audio>
+    
+    <div class="container">
+        <div style="width: 100%; height: 64.9vh; background-color: rgb(56, 56, 56);"  class="display-note">
+            <div id="nota" class="size">
+                DÓ
+            </div>
+            <div id="frequencia" class="size">
+                261 Hz
+            </div>
+        </div>
+        <canvas style="width: 100%; height: 35vh; background-color: rgb(56, 56, 56);" id="oscilloscope"></canvas>
+    </div>
     
 
     <script async>
-        
-        var audio = document.querySelector('audio');
-        var display = document.getElementById("display");
-        var audioCtx;
-        var source;
-        var analyser;
-        var processor;
-        var mostra = true;
 
-        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }}).then(
+        ((window, undefined) => {
+            if (window.AnalyserNode && !window.AnalyserNode.prototype.getFloatTimeDomainData) {
+                var uint8 = new Uint8Array(2048);
+                window.AnalyserNode.prototype.getFloatTimeDomainData = function (array) {
+                    this.getByteTimeDomainData(uint8);
+                    for (var i = 0, imax = array.length; i < imax; i++) {
+                        array[i] = (uint8[i] - 128) * 0.0078125;
+                    }
+                };
+            }
+        })(window);
+        
+        var canvas = document.querySelector('canvas');
+        var canvasCtx = canvas.getContext("2d");
+        
+        var frequencia = document.getElementById('frequencia');
+        var nota = document.getElementById('nota');
+
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+        var audioContext;
+        var analyser;
+        var audioSourceNode;
+
+        var frequenciasMap = {
+            "CCC": "C",
+            "CEG": "D�",
+            "C#C#C#": "C#",
+            "DDD": "D",
+            "D#D#D#": "D#",
+            "EEE": "E",
+            "FFF": "F",
+            "F#F#F#": "F#",
+            "GGG": "G",
+            "G#G#G#": "G#",
+            "AAA": "A",
+            "A#A#A#": "A#",
+            "BBB": "B",
+        };
+        
+        
+        navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
             stream => {
-                //while (true) {
-                audioCtx = new AudioContext();
-                source = audioCtx.createMediaStreamSource(stream);
+
+                audioContext = new AudioContext();
+                analyser = audioContext.createAnalyser();
+                audioSourceNode = audioContext.createMediaStreamSource(stream);
                 
-                analyser = audioCtx.createAnalyser();
-                processor = audioCtx.createScriptProcessor(2048, 1, 1);
-                // analyser.minDecibels = -90;
-                // analyser.maxDecibels = -10;
-                // analyser.smoothingTimeConstant = 0.85;
-                analyser.fftSize = 2048;
-                
-                source.connect(processor);
-                source.connect(analyser);
-                processor.connect(audioCtx.destination);
-                
-                // var bufferLength = analyser.frequencyBinCount;
+                analyser.fftSize = 4096;
+                var bufferLength = analyser.frequencyBinCount;
                 // var dataArray = new Uint8Array(bufferLength);
                 // analyser.getByteFrequencyData(dataArray);
+
+                audioSourceNode.connect(analyser);
                 
+                // console.log(dataArray);
 
-                processor.onaudioprocess = function(audioProcessingEvent) {
-                    let inputBuffer = audioProcessingEvent.inputBuffer;
-                    let outputBuffer = audioProcessingEvent.outputBuffer;
-                    let rms;
-                    let total = 0.0;
-                    let normalThreshold = -50;
-                    let duckThreshold = 0.15
-                    let len = 2048 * outputBuffer.numberOfChannels;
+                process();
 
-                    let maior = -10000;
-                    let key = 0;
-                    for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
-                        let inputData = inputBuffer.getChannelData(channel);
-                        let outputData = outputBuffer.getChannelData(channel);
-
-                        for (let sample = 0; sample < inputBuffer.length; sample++) {
-                            // make output equal to the same as the input
-                            outputData[sample] = inputData[sample];
-                            total += Math.abs(inputData[sample]);
-
-                            if ( inputData[sample] > maior) {
-                                maior = inputData[sample]; 
-                                key = sample;
-                            }
-
-                        }
-                    }
-                    
-                    console.log(maior, key);
-                    //Root mean square
-                    rms = Math.sqrt( total / len );
-
-                    //We set the threshold to at least 'normalThreshold'
-                    let f = normalThreshold + Math.min(rms - duckThreshold, 0) * 5 * normalThreshold;
-
-                }
 
             },
             err => {
-                console.log(err);
+                alert("error");
             }
         );
+      
+        function process(){
+            setInterval(function(){
+                
+                timeDataArray = new Float32Array(analyser.frequencyBinCount);
+                
+                analyser.getFloatTimeDomainData(timeDataArray);
+                
+                
+                let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate);
+                fundamental = fundamental == 0 ? {nota: 0, frequencia: 0} : fundamental;
+                console.log(fundamental);
+                let notaTocada = frequenciasMap[fundamental.nota] || ''; 
 
-      
-      
+                if (fundamental.nota != 0) {
+                    // frequencia.innerHTML = `${fundamental.frequencia.toFixed(2)} Hz`;
+                    // nota.innerHTML = `${notaTocada}`;
+                }
+
+                // console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
+                draw(timeDataArray);
+                
+            },600);
+        }
+        
+
+        function autoCorrelate( buf, sampleRate ) {
+            // Implements the ACF2+ algorithm
+            var SIZE = buf.length;
+            var rms = 0;
+
+            for (var i=0;i<SIZE;i++) {
+                var val = buf[i];
+                rms += val*val;
+            }
+            rms = Math.sqrt(rms/SIZE);
+            if (rms<0.01) // not enough signal
+                return 0;
+
+            var r1=0, r2=SIZE-1, thres=0.2;
+            for (var i=0; i<SIZE/2; i++)
+                if (Math.abs(buf[i])<thres) { r1=i; break; }
+            for (var i=1; i<SIZE/2; i++)
+                if (Math.abs(buf[SIZE-i])<thres) { r2=SIZE-i; break; }
+
+            buf = buf.slice(r1,r2);
+            SIZE = buf.length;
+
+            var c = new Array(SIZE).fill(0);
+            for (var i=0; i<SIZE; i++)
+                for (var j=0; j<SIZE-i; j++)
+                    c[i] = c[i] + buf[j]*buf[j+i];
+
+            var d=0; while (c[d]>c[d+1]) d++;
+            var maxval=-1, maxpos=-1;
+
+            var arrayFrequencyes = [-1, -1, -1];
+            var arrayIndices = [-1, -1, -1];
+
+            for (var i=d; i<SIZE; i++) {
+
+                if (c[i] > arrayFrequencyes[0]) {
+                    arrayFrequencyes[0] = c[i];
+                    arrayIndices[0] = i;
+                }else{
+                    if ( ( c[i] > arrayFrequencyes[1] ) ) {
+                        arrayFrequencyes[1] = c[i];
+                        arrayIndices[1] = i;
+                    } else {
+                        if (  ( c[i] > arrayFrequencyes[2] )  ) {
+                            arrayFrequencyes[2] = c[i];
+                            arrayIndices[2] = i;
+                        } 
+                    }
+                }
+                
+                // if (c[i] > maxval) {
+                //     maxval = c[i];
+                //     maxpos = i;
+                // }
+            }
+
+            let frequencias = [-1, -1, -1];
+
+            for (let index = 0; index < arrayIndices.length; index++) {
+                let T0 = arrayIndices[index];
+                // console.log(T0);
+                
+                let x1=c[T0-1], x2=c[T0], x3=c[T0+1];
+                a = (x1 + x3 - 2*x2)/2;
+                b = (x3 - x1)/2;
+                if (a) T0 = T0 - b/(2*a);
+
+                frequencias[index] = sampleRate/T0;
+
+            }
+
+            // var T0 = maxpos;
+
+            // let x1=c[T0-1], x2=c[T0], x3=c[T0+1];
+            // a = (x1 + x3 - 2*x2)/2;
+            // b = (x3 - x1)/2;
+            // if (a) T0 = T0 - b/(2*a);
+
+            
+            let nota0 = pitch(Math.trunc( frequencias[0] ));
+            let nota1 = pitch(Math.trunc( frequencias[1] ));
+            let nota2 = pitch(Math.trunc( frequencias[2] ));
+            let notasFundamentais = [nota0, nota1, nota2];
+            notasFundamentais = notasFundamentais.sort();
+            
+            console.log(arrayFrequencyes );
+
+            return ( arrayFrequencyes[0] > 1 ) ? {
+                nota: `${notasFundamentais[0]}${notasFundamentais[1]}${notasFundamentais[2]}`,
+                frequencia: frequencias[0] 
+            } : {
+                nota: 0,
+                frequencia: 0
+            };
+        }
+
+
+        function draw(dataArray) {
+
+            var bufferLength = analyser.frequencyBinCount;
+
+            var dataArray = new Float32Array(bufferLength);
+
+            analyser.getFloatFrequencyData(dataArray);
+
+            canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+            
+            canvasCtx.fillStyle = 'rgb(56, 56, 56)';
+            canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            var barWidth = (WIDTH / bufferLength) * 3.2;
+            var barHeight;
+            var x = 0;
+
+            for(var i = 0; i < bufferLength; i++) {
+                barHeight = (dataArray[i] + 120)*2;
+                
+                canvasCtx.fillStyle = 'rgb(5, 146, 255)';
+                canvasCtx.strokeStyle = "rgb(5, 146, 255)";
+                canvasCtx.lineWidth   = 1;
+                canvasCtx.fillRect(x,HEIGHT-barHeight/2,barWidth,barHeight/2);
+
+                x += barWidth + 2.5;
+            }
+        }
         
     </script>
 </body>

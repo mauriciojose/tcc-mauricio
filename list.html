@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acordes</title>
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+        div#frequencia{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            /* color: rgb(5, 146, 255); */
+            /* width: 130px; */
+            /* height: 130px; */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+        }
+        div#nota{
+            color: white;
+            font-size: 28pt;
+            color: white;
+            background-color: rgb(5, 146, 255);
+            width: 130px;
+            height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 180px;
+            /* margin-bottom: 20px; */
+        }
+        div.display-note{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        div.size {
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="./css/fontawesome-free-5.15.3-web/css/all.css">
+
+</head>
+<body>
+    
+    <div class="container">
+        <div style="width: 100%; height: 100vh; background-color: rgb(56, 56, 56);"  class="display-note">
+            <div class="item">
+                <div id="nota" class="size">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 60 60" width="60px" height="60px">
+                        <g id="surface13787999">
+                        <path style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,100%,100%);fill-opacity:1;" d="M 42.109375 6.035156 L 29.160156 8.808594 C 27.316406 9.203125 26 10.832031 26 12.71875 L 26 35.425781 C 26 39.324219 14 36.066406 14 46.957031 C 14 48.957031 15.203125 53.996094 20.933594 53.996094 C 27.972656 54 30 48.648438 30 42.707031 C 30 40.164062 30 19.074219 30 19.074219 L 42.160156 16.40625 C 43.234375 16.171875 44 15.21875 44 14.117188 L 44 7.5625 C 44 6.566406 43.082031 5.824219 42.109375 6.035156 Z M 42.109375 6.035156 "/>
+                        </g>
+                    </svg>
+                </div>
+                <div id="frequencia" class="size">
+                    Notas
+                </div>
+            </div>
+            <div class="item" style="margin-top: 30px;">
+                <div id="nota" class="size">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div id="frequencia" class="size">
+                    Acordes
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

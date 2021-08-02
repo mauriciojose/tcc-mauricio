@@ -55,16 +55,20 @@
     
     <div class="container">
         <div style="width: 100%; height: 64.4vh; background-color: rgb(56, 56, 56);"  class="display-note">
+            <canvas id="foo"></canvas>
             <div id="nota" class="size">
                 
             </div>
             <div id="frequencia" class="size">
-                12 Hz
+                0 Hz
             </div>
         </div>
-        <canvas style="width: 100%; height: 35vh;" id="oscilloscope"></canvas>
+        <canvas id="graph" style="width: 100%; height: 35vh; background-color: rgb(56, 56, 56);" id="oscilloscope"></canvas>
     </div>
+
+    <script src="./gauge/gauge.min.js"></script>
     
+    <script src="./gauge.js"></script>
 
     <script async>
 
@@ -80,7 +84,7 @@
             }
         })(window);
         
-        var canvas = document.querySelector('canvas');
+        var canvas = document.querySelector('canvas#graph');
         var canvasCtx = canvas.getContext("2d");
         
         var frequencia = document.getElementById('frequencia');
@@ -94,6 +98,22 @@
         var audioContext;
         var analyser;
         var audioSourceNode;
+
+        var frequenciasMap = {
+            "CCC": "C",
+            "CEG": "DÓ",
+            "C#C#C#": "C#",
+            "DDD": "D",
+            "D#D#D#": "D#",
+            "EEE": "E",
+            "FFF": "F",
+            "F#F#F#": "F#",
+            "GGG": "G",
+            "G#G#G#": "G#",
+            "AAA": "A",
+            "A#A#A#": "A#",
+            "BBB": "B",
+        };
         
         
         navigator.mediaDevices.getUserMedia({audio: { echoCancellation: true }, video: false}).then(
@@ -129,12 +149,21 @@
                 analyser.getFloatTimeDomainData(timeDataArray);
                 
                 
-                let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate).toFixed(2);
-                console.log(pitch(fundamental));
-                let notaTocada = pitch(fundamental);
-                
-                frequencia.innerHTML = `${fundamental} Hz`;
-                nota.innerHTML = `${notaTocada}`;
+                let fundamental = autoCorrelate(timeDataArray,audioContext.sampleRate);
+                fundamental = fundamental == 0 ? {nota: 0, frequencia: 0} : fundamental;
+
+                let note= noteFromPitch(fundamental.frequencia);
+                let detune = centsOffFromPitch( fundamental.frequencia, note );
+                detune = isNaN(detune) ? -100 : detune;
+                gauge.set(detune);
+                // console.log("aquiii", note, detune);
+
+                let notaTocada = frequenciasMap[fundamental.nota] || ''; 
+
+                if (fundamental.nota != 0) {
+                    frequencia.innerHTML = `${fundamental.frequencia.toFixed(2)} Hz`;
+                    nota.innerHTML = `${notaTocada}`;
+                }
 
                 // console.log(autoCorrelate(timeDataArray,audioContext.sampleRate));
                 draw(timeDataArray);
@@ -182,11 +211,11 @@
                     arrayFrequencyes[0] = c[i];
                     arrayIndices[0] = i;
                 }else{
-                    if (c[i] > arrayFrequencyes[1]) {
+                    if ( ( c[i] > arrayFrequencyes[1] ) ) {
                         arrayFrequencyes[1] = c[i];
                         arrayIndices[1] = i;
                     } else {
-                        if (c[i] > arrayFrequencyes[2]) {
+                        if (  ( c[i] > arrayFrequencyes[2] )  ) {
                             arrayFrequencyes[2] = c[i];
                             arrayIndices[2] = i;
                         } 
@@ -203,6 +232,7 @@
 
             for (let index = 0; index < arrayIndices.length; index++) {
                 let T0 = arrayIndices[index];
+                // console.log(T0);
                 
                 let x1=c[T0-1], x2=c[T0], x3=c[T0+1];
                 a = (x1 + x3 - 2*x2)/2;
@@ -219,9 +249,23 @@
             // a = (x1 + x3 - 2*x2)/2;
             // b = (x3 - x1)/2;
             // if (a) T0 = T0 - b/(2*a);
-            console.log(frequencias, Math.trunc( frequencias[0] ));
 
-            return ( Math.trunc( frequencias[0] ) === Math.trunc( frequencias[1] ) ) || ( Math.trunc( frequencias[0]  )=== Math.trunc( frequencias[2] ) ) ? frequencias[0] : 0;
+            
+            let nota0 = pitch(Math.trunc( frequencias[0] ));
+            let nota1 = pitch(Math.trunc( frequencias[1] ));
+            let nota2 = pitch(Math.trunc( frequencias[2] ));
+            let notasFundamentais = [nota0, nota1, nota2];
+            notasFundamentais = notasFundamentais.sort();
+            
+            // console.log(arrayFrequencyes );
+
+            return ( arrayFrequencyes[0] > 1 ) ? {
+                nota: `${notasFundamentais[0]}${notasFundamentais[1]}${notasFundamentais[2]}`,
+                frequencia: frequencias[0] 
+            } : {
+                nota: 0,
+                frequencia: 0
+            };
         }
 
 
@@ -255,5 +299,6 @@
         }
         
     </script>
+    
 </body>
 </html>
